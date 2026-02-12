@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoExpress | Башкы бет</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .glass-effect { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); }
+        .btn-gradient { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+        .car-card:hover { transform: translateY(-10px); border-color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-slate-200 font-sans min-h-screen">
+
+    <nav class="sticky top-0 z-50 glass-effect border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="{% url 'home' %}" class="text-2xl font-black tracking-tighter text-white uppercase italic">
+                AUTO<span class="text-blue-500">EXPRESS</span>
+            </a>
+
+            <div class="flex items-center gap-4 md:gap-6">
+                {% if user.is_authenticated %}
+                    <div class="hidden md:flex flex-col items-end mr-2">
+                        <span class="text-[10px] uppercase text-slate-500 font-bold">Колдонуучу</span>
+                        <span class="text-sm font-bold text-white">{{ user.username }}</span>
+                    </div>
+
+                    <a href="{% url 'add-car' %}" class="btn-gradient text-white px-5 py-2.5 rounded-full font-bold text-xs transition flex items-center gap-2 hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/20">
+                        <i class="fa-solid fa-plus"></i> Жарыя берүү
+                    </a>
+
+                    <form action="{% url 'admin:logout' %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-slate-500 hover:text-red-500 transition px-2">
+                            <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="/admin/login/" class="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition">Кирүү</a>
+
+                    <a href="{% url 'register' %}" class="bg-blue-600/10 text-blue-500 border border-blue-500/30 px-5 py-2.5 rounded-full font-bold text-xs hover:bg-blue-600 hover:text-white transition shadow-lg">
+                        Катталуу
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <header class="py-16 px-6 text-center">
+        <h2 class="text-5xl md:text-7xl font-black mb-6 uppercase italic text-white tracking-tighter">
+            КЫРГЫЗСТАНДЫН <span class="text-blue-500">АВТО-БАЗАРЫ</span>
+        </h2>
+        <p class="text-slate-400 max-w-xl mx-auto mb-10 text-sm md:text-base">Унааңызды тез сатып же жаңысын ишенимдүү табыңыз.</p>
+
+        <form method="GET" action="{% url 'home' %}" class="max-w-2xl mx-auto relative group">
+            <input type="text" name="q" placeholder="Маркасы же модели боюнча издөө... (мис: BMW)"
+                   class="w-full bg-slate-900 border-2 border-slate-800 py-5 px-8 rounded-full outline-none focus:border-blue-500 text-white transition-all shadow-2xl group-hover:border-slate-700">
+            <button type="submit" class="absolute right-3 top-3 bg-blue-600 p-3.5 rounded-full hover:bg-blue-700 transition">
+                <i class="fa-solid fa-magnifying-glass text-white"></i>
+            </button>
+        </form>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-10 px-6">
+        <div class="flex items-center justify-between mb-10 border-l-4 border-blue-600 pl-4">
+            <h3 class="text-xl font-bold uppercase tracking-widest text-white italic">Акыркы жарыялар</h3>
+            <span class="bg-slate-800 px-4 py-1 rounded-full text-[10px] font-bold text-slate-400">САНЫ: {{ cars|length }}</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for car in cars %}
+            <div class="car-card bg-slate-900 rounded-[2.5rem] overflow-hidden border border-slate-800 transition-all duration-300 group">
+
+                <div class="relative h-64 overflow-hidden">
+                    {% if car.image %}
+                        <img src="{{ car.image.url }}" alt="{{ car.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    {% else %}
+                        <div class="w-full h-full bg-slate-800 flex items-center justify-center italic text-slate-600">Сүрөт жок</div>
+                    {% endif %}
+
+                    <div class="absolute bottom-4 right-4 glass-effect px-5 py-2 rounded-2xl border border-white/10 shadow-xl">
+                        <span class="text-xl font-black text-white">${{ car.price }}</span>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <h4 class="text-2xl font-black text-white mb-2 truncate uppercase">{{ car.brand }} {{ car.model_name }}</h4>
+
+                    <div class="flex gap-4 mb-6">
+                        <span class="text-[10px] font-bold text-blue-500 uppercase bg-blue-500/10 px-3 py-1 rounded-md">{{ car.year }} - ЖЫЛ</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-800 px-3 py-1 rounded-md">{{ car.get_transmission_display }}</span>
+                    </div>
+
+                    <a href="https://wa.me/{{ car.phone_number|default:'996700000000' }}?text=Саламатсызбы! AutoExpress'тен {{ car.brand }} {{ car.model_name }} боюнча жазып жатам."
+                       target="_blank"
+                       class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition flex items-center justify-center gap-3 shadow-lg shadow-emerald-900/20">
+                        <i class="fa-brands fa-whatsapp text-xl"></i> Сатуучу менен байланыш
+                    </a>
+
+                    <div class="mt-8 pt-4 border-t border-slate-800/50 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-[10px] font-bold text-white italic">
+                                {{ car.owner.username|slice:":1"|upper }}
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase italic">{{ car.owner.username }}</span>
+                        </div>
+                        <span class="text-[10px] text-slate-600 font-bold uppercase">{{ car.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-24 bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-800">
+                <i class="fa-solid fa-car-rear text-7xl text-slate-800 mb-6"></i>
+                <h3 class="text-xl font-bold text-slate-500 uppercase italic">Азырынча жарыялар жок</h3>
+                <p class="text-slate-600 mt-2 mb-8">Биринчилерден болуп унааңызды сатыкка коюңуз!</p>
+                <a href="{% url 'add-car' %}" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold uppercase text-xs transition hover:bg-blue-700">Жарыя кошуу</a>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer class="py-12 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em] font-bold border-t border-slate-900 mt-20">
+        &copy; 2026 AUTOEXPRESS KG | Бардык укуктар корголгон
+    </footer>
+
+</body>
+</html>
